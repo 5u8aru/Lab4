@@ -10,6 +10,7 @@ class User(Base):
     username = Column(String(120), nullable=False)
     email = Column('email', String(100), nullable=False)
     password = Column(String(255), nullable=False)
+    role = Column(Integer, nullable=False)
     first_name = Column(String(120), nullable=True)
     last_name = Column(String(120), nullable=True)
     phone = Column(String(100), nullable=True)
