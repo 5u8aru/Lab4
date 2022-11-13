@@ -11,6 +11,8 @@ faker = "*"
 flask = "*"
 marshmallow = "*"
 flask-bcrypt = "*"
+flask-jwt-extended = "*"
+marshmallow-enum = "*"
 
 [dev-packages]
 
