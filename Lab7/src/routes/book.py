@@ -3,7 +3,6 @@ from flask import Blueprint, jsonify, request
 from src.utils import *
 import src.models as models
 import src.db as db
-from src.routes.user import UserRole
 from src import app
 from flask_jwt_extended import (
     JWTManager, jwt_required, get_jwt_identity
@@ -21,7 +20,6 @@ def create_book():
         author_first_name = fields.Str(required=True)
         author_last_name = fields.Str(required=True)
         pages = fields.Int(required=True)
-        status = fields.Str(required=False)
 
     try:
         book = Book().load(request.json)
@@ -30,18 +28,13 @@ def create_book():
 
     user = db.session.query(models.User).filter(models.User.id == get_jwt_identity()).first()
     if user is None:
-        return jsonify({'message': 'Unauthorized'}), 404
-    if user.role != UserRole.Administrator:
-        return jsonify({'message': 'Forbidden'}), 401
+        return jsonify({'message': 'Unauthorized'}), 403
     if db.session.query(models.Book).filter(models.Book.name == book['name']).count() != 0:
         return jsonify({'message': 'Book already exists'}), 400
     new_book = models.Book(name=book['name'], author_first_name=book['author_first_name'],
-                           author_last_name=book['author_last_name'], pages=book['pages'], status=book['status'])
-    try:
-        db.session.add(new_book)
-    except:
-        db.session.rollback()
-        return jsonify({'message': 'Error creating book'}), 500
+                           author_last_name=book['author_last_name'], pages=book['pages'])
+
+    db.session.add(new_book)
     db.session.commit()
     return get_book_id(new_book.id)[0], 200
 
@@ -52,7 +45,7 @@ def get_book_id(book_id):
     if book is None:
         return jsonify({'message': 'Book not found'}), 404
     res = {'id': book.id, 'name': book.name, 'author_first_name': book.author_first_name,
-           "author_last_name": book.author_last_name, "pages": book.pages, "status": book.status}
+           "author_last_name": book.author_last_name, "pages": book.pages}
     return jsonify(res), 200
 
 
@@ -71,7 +64,6 @@ def get_book_status(values):
 def update_book(book_id):
     class Book(Schema):
         name = fields.Str(required=True)
-        new_status = fields.Str(required=True)
 
     try:
         book = Book().load(request.json)
@@ -79,20 +71,12 @@ def update_book(book_id):
         return jsonify(error.messages), 400
     user = db.session.query(models.User).filter(models.User.id == get_jwt_identity()).first()
     if user is None:
-        return jsonify({'message': 'Unauthorized'}), 404
-    if user.role != UserRole.Administrator:
-        return jsonify({'message': 'Forbidden'}), 401
+        return jsonify({'message': 'Unauthorized'}), 403
     book_to_update = db.session.query(models.Book).filter(models.Book.id == book_id).first()
     if book_to_update is None:
         return jsonify({'message': 'Book not found'}), 404
-    if not book_to_update.name == book['name']:
-        return jsonify({'message': 'Incorrect book name'}), 400
-    try:
-        if book.__contains__('new_status'):
-            book_to_update.status = book['new_status']
-    except:
-        db.session.rollback()
-        return jsonify({'message': 'Error updating book'}), 500
+    if book.__contains__('name'):
+        book_to_update.name = book['name']
     db.session.commit()
     return get_book_id(book_id)[0], 200
 
@@ -104,17 +88,12 @@ def delete_book(book_id):
     user = db.session.query(models.User).filter(models.User.id == get_jwt_identity()).first()
     orders = db.session.query(models.Order).filter(models.Order.user_id == get_jwt_identity()).all()
     if user is None:
-        return jsonify({'message': 'Unauthorized'}), 404
-    if user.role != UserRole.Administrator:
-        return jsonify({'message': 'Forbidden'}), 401
+        return jsonify({'message': 'Unauthorized'}), 403
     if book is None:
         return jsonify({'message': 'Book not found'}), 404
-    try:
+    if orders is not None:
         for order in orders:
             db.session.delete(order)
-        db.session.delete(book)
-    except:
-        db.session.rollback()
-        return jsonify({'message': 'Error deleting book'}), 500
+    db.session.delete(book)
     db.session.commit()
     return jsonify({'message': 'Book deleted'}), 200

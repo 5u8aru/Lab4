@@ -13,6 +13,8 @@ marshmallow = "*"
 flask-bcrypt = "*"
 flask-jwt-extended = "*"
 marshmallow-enum = "*"
+flask-testing = "*"
+coverage = "*"
 
 [dev-packages]
 

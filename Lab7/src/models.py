@@ -10,7 +10,6 @@ class User(Base):
     username = Column(String(120), nullable=False)
     email = Column('email', String(100), nullable=False)
     password = Column(String(255), nullable=False)
-    role = Column(Integer, nullable=False)
     first_name = Column(String(120), nullable=True)
     last_name = Column(String(120), nullable=True)
     phone = Column(String(100), nullable=True)
@@ -31,7 +30,7 @@ class Book(Base):
 class Order(Base):
     __tablename__ = 'orders'
     id = Column(Integer, primary_key=True)
-    ship_date = Column(Date, nullable=False)
+    ship_date = Column(String(100), nullable=False)
     complete = Column(Boolean, nullable=False)
     address = Column(String(100), nullable=False)
     user_id = Column('user_id', ForeignKey('users.id', ondelete='CASCADE'), nullable=False)

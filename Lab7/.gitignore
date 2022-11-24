@@ -1,0 +1,7 @@
+**/__pycache__/
+.idea/
+lab6/
+venv/
+app.egg-info/
+test.db
+.coverage
